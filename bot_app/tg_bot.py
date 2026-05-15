@@ -60,6 +60,8 @@ async def ai_handler(message: types.Message):
         return
     await bot.send_chat_action(message.chat.id, "typing")
     answer = ai_god.ask_ai(message.text)
+    if not answer or not answer.strip():
+        answer = "Sorry, I couldn't generate a response."
     ai_god.save_log(message.text, answer)
     await message.reply(answer)
 

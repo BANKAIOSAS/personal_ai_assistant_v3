@@ -87,7 +87,7 @@
 </head>
 <body>
     <div class="chat-container">
-        <div class="chat-box"></div>
+        <div id="chat-box"></div>
         <div class="input-container">
             <input type="text" id="userInput" placeholder="Ask Something...">
             <button id="sendBtn">Send</button>
@@ -95,7 +95,7 @@
     </div>
 
     <script>
-        const chatbox = document.getElementById('chatbox');
+        const chatbox = document.getElementById('chat-box');
         const input = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
 
@@ -112,7 +112,7 @@
             if (!text) return;
 
             addMessage(text, true);
-            input.value('');
+            input.value = '';
 
             try {
                 const response = await fetch('/api/ask/', {
