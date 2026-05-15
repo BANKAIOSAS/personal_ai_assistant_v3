@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Assistant</title>
+</head>
+<body>
+    <h2>Web Chat Interface</h2>
+    <div id="chatbox" style="height: 400px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; margin-bottom: 10px; font-family: Arial;"></div>
+
+    <label for="userInput">Message:</label>
+    <input type="text" id="userInput" placeholder="Ask something..." style="width: 60%; padding: 5px;">
+    <button onclick="sendMessage()" style="padding: 5px 15px;">Send</button>
+
+    <script>
+        async function sendMessage() {
+            const inputField = document.getElementById("userInput");
+            const text = inputField.value;
+            if (!text.trim()) return;
+
+            const chatbox = document.getElementById("chatbox");
+            chatbox.innerHTML += `<p><b>You:</b> ${text}</p>`;
+            inputField.value = "";
+
+            try {
+                const response = await fetch('/api/ask/', {
+                    method: 'POST',
+                    body: JSON.stringify({text: text}),
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const data = await response.json();
+                chatbox.innerHTML += `<p><b>AI:</b> ${data.answer || data.error}</p>`;
+            } catch (error) {
+                chatbox.innerHTML += `<p style="color: red;">Error connecting to server.</p>`;
+            }
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        document.getElementById("userInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendMessage();
+        });
+    </script>
+</body>
+</html>
+
