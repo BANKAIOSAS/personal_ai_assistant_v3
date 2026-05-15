@@ -51,6 +51,15 @@ class AiManagerMaster:
         except socket.error:
             return False
 
+    def get_chat_history(self, limit = 5):
+        conn = sqlite3.connect(self.db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT user_msg, ai_msg FROM chat_logs ORDER BY rowid DESC LIMIT ?", (limit,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        return list(reversed(rows))
+
     def ask_ai(self, user_text):
         if not self.check_server_socket():
             return "Server Offline: LM Studio is not running!"
@@ -58,13 +67,19 @@ class AiManagerMaster:
         profile = self.get_profile_data()
         context = ", ".join([f"{r[0]}: {r[1]}" for r in profile]) if profile else "No data"
 
+        history = self.get_chat_history(limit=5)
+        messages = [{"role": "system", "content": f"User info: {context}. Be concise."}]
+
+        for user_msg, ai_msg in history:
+            messages.append({"role": "user", "content": user_msg})
+            messages.append({"role": "assistant", "content": ai_msg})
+
+        messages.append({"role": "user", "content": user_text})
+
         try:
             payload = {
                 "model": "local",
-                "messages": [
-                    {"role": "system", "content": f"User info: {context}. Be concise."},
-                    {"role": "user", "content": user_text}
-                ],
+                "messages": messages,
                 "temperature": 0.7,
                 "max_tokens": 150
             }
@@ -93,7 +108,11 @@ def api_get_answer(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            user_text = data.get('text', '')
+            user_text = data.get('text', '').strip()
+
+            if not user_text:
+                return JsonResponse({"error": "Empty Message"}, status=400)
+
             ai_response = ai_god.ask_ai(user_text)
             ai_god.save_log(user_text, ai_response)
             return JsonResponse({"answer": ai_response})

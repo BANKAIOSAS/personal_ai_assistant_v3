@@ -55,6 +55,9 @@ async def show_schedule(message: types.Message):
 
 @dp.message(F.text & ~F.text.startswith('/'))
 async def ai_handler(message: types.Message):
+    if not message.text.strip():
+        await message.reply("Please Send A Non-Empty Message")
+        return
     await bot.send_chat_action(message.chat.id, "typing")
     answer = ai_god.ask_ai(message.text)
     ai_god.save_log(message.text, answer)
