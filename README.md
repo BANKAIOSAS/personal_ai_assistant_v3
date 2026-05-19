@@ -7,13 +7,17 @@ Both interfaces connect to a locally hosted language model via LM Studio.
 
 ## 📋 Project Description
 
-This project is a **Hybrid Chatbot** that lets the user communicate with a local LLM through two independent channels simultaneously:
+This project is a **Hybrid Chatbot** that lets the user communicate with a local LLM through
+two independent channels simultaneously:
 
 - **Web Interface** — browser-based chat available at `http://localhost:8000`
 - **Telegram Bot** — fully functional bot with `/profile`, `/tasks`, and `/schedule` commands
 
-The system stores conversation history, user profile, task list, and schedule in a SQLite database.
-Both interfaces run concurrently within a single Django process.
+The system stores conversation history, user profile, task list, and schedule in a SQLite
+database. Both interfaces run concurrently within a single Django process.
+
+All sensitive configuration (API tokens, secret keys, server URLs) is stored exclusively in
+a `.env` file that is never committed to the repository.
 
 ---
 
@@ -28,6 +32,7 @@ Both interfaces run concurrently within a single Django process.
 | Database        | SQLite3                           |
 | Concurrency     | Threading + AsyncIO               |
 | Frontend        | HTML, CSS, Vanilla JS (Fetch API) |
+| Environment     | python-dotenv, os                 |
 
 ---
 
@@ -38,10 +43,11 @@ personal_ai_assistant_v3/
 │
 ├── manage.py
 ├── requirements.txt
-├── db.sqlite3                        # created automatically on first run
+├── .env.example                      # template — copy to .env and fill in
+├── .gitignore                        # excludes .env, db.sqlite3, venv/, __pycache__/
 │
 ├── personal_ai_assistant_v3/         # Django configuration
-│   ├── settings.py
+│   ├── settings.py                   # loads secrets via os.getenv()
 │   ├── urls.py
 │   ├── wsgi.py
 │   └── asgi.py
@@ -55,6 +61,8 @@ personal_ai_assistant_v3/
     └── templates/
         └── chat.html                 # web chat interface
 ```
+
+> `db.sqlite3` is created automatically on first run and is excluded from version control.
 
 ---
 
@@ -85,13 +93,32 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Apply migrations
+### 4. Configure environment variables
+
+```bash
+# Copy the template
+cp .env.example .env
+```
+
+Open `.env` and fill in your values:
+
+```env
+TELEGRAM_BOT_TOKEN=your_token_here
+DJANGO_SECRET_KEY=your_secret_key_here
+LM_STUDIO_URL=http://localhost:1234/v1/chat/completions
+LM_STUDIO_PORT=1234
+```
+
+> ⚠️ **Never commit `.env` to git.** It is already listed in `.gitignore`.
+> The application reads all secrets at runtime via `os.getenv()`.
+
+### 5. Apply migrations
 
 ```bash
 python manage.py migrate
 ```
 
-### 5. Set up LM Studio
+### 6. Set up LM Studio
 
 - Download and install [LM Studio](https://lmstudio.ai/)
 - Load any compatible model (recommended: `Mistral 7B` or `LLaMA 3`)
@@ -163,7 +190,7 @@ The system gracefully handles the following situations:
 
 ## 🗄 Data Storage
 
-All data is stored in `db.sqlite3`:
+All data is stored in `db.sqlite3` (auto-created, excluded from git):
 
 | Table          | Purpose                                           |
 | -------------- | ------------------------------------------------- |
@@ -172,7 +199,17 @@ All data is stored in `db.sqlite3`:
 | `tasks`        | Task list with completion status                  |
 | `schedule`     | Academic timetable organized by day               |
 
-All tables are created automatically on first run.
+All tables are created automatically on first run via `_init_table()`.
+
+---
+
+## 🔐 Security Notes
+
+- All secrets are loaded at runtime through `os.getenv()` (standard library `os` module)
+  and `python-dotenv` — no credentials are hardcoded in source files
+- `.env` is listed in `.gitignore` and must **never** be committed
+- `db.sqlite3` is also excluded — it may contain personal conversation history
+- Use `.env.example` as the only reference for required variables
 
 ---
 
@@ -182,6 +219,7 @@ All tables are created automatically on first run.
 django>=4.2
 aiogram>=3.0
 requests>=2.31
+python-dotenv>=1.0
 ```
 
 ---
