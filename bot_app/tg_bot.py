@@ -20,10 +20,17 @@ dp = Dispatcher()
 async def start(message: types.Message):
     msg = (
         "👋 Welcome! I am your AI Assistant.\n\n"
-        "<b>Commands:</b>\n"
-        "/profile - Personal information\n"
-        "/tasks - Task manager\n"
-        "/schedule - Academic schedule\n"
+        "<b>View:</b>\n"
+        "/profile — Personal information\n"
+        "/tasks — Task list\n"
+        "/schedule — Academic schedule\n\n"
+        "<b>Add / Update:</b>\n"
+        "/add_task &lt;name&gt; — Add a task\n"
+        "/done &lt;name&gt; — Mark task as done\n"
+        "/set &lt;key&gt; &lt;value&gt; — Update profile info\n"
+        "/add_schedule &lt;day&gt; &lt;discipline&gt; — Add schedule entry\n\n"
+        "<b>Manage:</b>\n"
+        "/clear &lt;tasks|profile|schedule|history&gt; — Clear data\n\n"
         "Send any message to chat with AI."
     )
     await message.answer(msg, parse_mode="HTML")
@@ -58,6 +65,82 @@ async def show_schedule(message: types.Message):
     res = "\n".join([f"📅 <b>{r[0]}</b>: {r[1]}" for r in data])
     await message.answer(f"🕒 <b>Your Schedule:</b>\n\n{res}", parse_mode="HTML")
 
+
+@dp.message(Command("add_task"))
+async def cmd_add_task(message: types.Message):
+    args = message.text.split(maxsplit=1)э
+    if len(args) < 2 or not args[1].strip():
+        await message.answer("Usage: /add_task <task_name>\nExample: /add_task Submit lab report")
+        return
+    ai_god.add_task(args[1].strip())
+    await message.answer(f"Task Added: <b>{args[1].strip()}</b>", parse_mode="HTML")
+
+
+@dp.message(Command("done"))
+async def cmd_done_task(message: types.Message):
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2 or not args[1].strip():
+        await message.answer("Usage: /done <task name or part of it>\nExample: /done lab report")
+        return
+    success = ai_god.complete_task(args[1].strip())
+    if success:
+        await message.answer("✅ Task marked as done!")
+    else:
+        await message.answer("❌ Task not found. Check /tasks for exact names.")
+
+
+@dp.message(Command("set"))
+async def cmd_set_profile(message: types.Message):
+    args = message.text.split(maxsplit=2)
+    if len(args) < 3 or not args[2].strip():
+        await message.answer(
+            "Usage: /set <key> <value>\n"
+            "Example: /set name Alex\n"
+            "Example: /set age 20\n"
+            "Example: /set city Almaty"
+        )
+        return
+    ai_god.set_profile(args[1].strip().lower(), args[2].strip())
+    await message.answer(f"✅ Saved: <b>{args[1]}</b> = {args[2]}", parse_mode="HTML")
+
+
+@dp.message(Command("add_schedule"))
+async def cmd_add_schedule(message: types.Message):
+    args = message.text.split(maxsplit=2)
+    if len(args) < 3 or not args[2].strip():
+        await message.answer(
+            "Usage: /add_schedule <day> <discipline>\n"
+            "Example: /add_schedule Monday Python Programming"
+        )
+        return
+    ai_god.add_schedule(args[1].strip(), args[2].strip())
+    await message.answer(f"📅 Added to schedule: <b>{args[1]}</b> — {args[2]}", parse_mode="HTML")
+
+
+@dp.message(Command("clear"))
+async def cmd_clear(message: types.Message):
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        await message.answer(
+            "Usage: /clear <target>\n"
+            "Targets: <b>tasks</b> | <b>profile</b> | <b>schedule</b> | <b>history</b>",
+            parse_mode="HTML"
+        )
+        return
+    table_map = {
+        'tasks':    'tasks',
+        'profile':  'user_profile',
+        'schedule': 'schedule',
+        'history':  'chat_logs',
+    }
+    target = args[1].strip().lower()
+    table = table_map.get(target)
+    if not table:
+        await message.answer("❌ Unknown target. Use: tasks, profile, schedule, or history")
+        return
+    ai_god.clear_table(table)
+    await message.answer(f"🗑 <b>{target}</b> cleared successfully.", parse_mode="HTML")
+    
 
 @dp.message(F.text & ~F.text.startswith('/'))
 async def ai_handler(message: types.Message):

@@ -44,6 +44,47 @@ class AiManagerMaster:
     def get_schedule_data(self):
         return self._run_select("SELECT day, discipline FROM schedule ORDER BY id")
 
+    def add_task(self, name):
+        conn = sqlite3.connect(self.db)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO tasks (name, status) VALUES (?, 0)", (name, ))
+        conn.commit()
+        conn.close()
+
+    def complete_task(self, name):
+        conn = sqlite3.connect(self.db)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE tasks SET status = 1 WHERE name LIKE ?", (f'%{name}%',))
+        affected = cursor.rowcount
+        conn.commit()
+        conn.close()
+        return affected > 0
+    
+    def set_profile(self, hey, value):
+        conn = sqlite3.connect(self.db)
+        cursor = conn.cursor()
+        cursor.execute("INSERT OR REPLACE INTO user_profiles VALUES (?, ?)", (key, value))
+        conn.commit()
+        conn.close()
+
+    def add_schedule(self, day, discipline):
+        conn = sqlite3.connect(self.db)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO schedule (day, discipline) VALUES (?, ?)", (day, discipline))
+        conn.commit()
+        conn.close()
+
+    def clear_table(self, table_name):
+        allowed = {'tasks', 'user_profile', 'schedule', 'chat_logs'}
+        if table_name not in allowed:
+            return False
+        conn = sqlite3.connect(self.db)
+        cursor = conn.cursor()
+        cursor.execute(f"DELETE FROM {table_name}")
+        conn.commit()
+        conn.close()
+        return True
+
     def check_server_socket(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(1)
