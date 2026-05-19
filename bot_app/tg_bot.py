@@ -68,7 +68,7 @@ async def show_schedule(message: types.Message):
 
 @dp.message(Command("add_task"))
 async def cmd_add_task(message: types.Message):
-    args = message.text.split(maxsplit=1)э
+    args = message.text.split(maxsplit=1)
     if len(args) < 2 or not args[1].strip():
         await message.answer("Usage: /add_task <task_name>\nExample: /add_task Submit lab report")
         return
