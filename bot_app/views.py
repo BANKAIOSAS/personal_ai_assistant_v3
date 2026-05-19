@@ -60,7 +60,7 @@ class AiManagerMaster:
         conn.close()
         return affected > 0
     
-    def set_profile(self, hey, value):
+    def set_profile(self, key, value):
         conn = sqlite3.connect(self.db)
         cursor = conn.cursor()
         cursor.execute("INSERT OR REPLACE INTO user_profiles VALUES (?, ?)", (key, value))

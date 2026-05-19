@@ -1,4 +1,5 @@
 import os
+import html
 import asyncio
 import threading
 from dotenv import load_dotenv
@@ -42,7 +43,7 @@ async def show_profile(message: types.Message):
     if not data:
         await message.answer("Profile is empty.")
         return
-    res = "\n".join([f"🔹 <b>{r[0]}</b>: {r[1]}" for r in data])
+    res = "\n".join([f"🔹 <b>{html.escape(r[0])}</b>: {html.escape(r[1])}" for r in data])
     await message.answer(f"👤 <b>Your Profile:</b>\n\n{res}", parse_mode="HTML")
 
 
@@ -52,7 +53,7 @@ async def show_tasks(message: types.Message):
     if not data:
         await message.answer("No tasks found.")
         return
-    res = "\n".join([f"{'✅' if r[1] else '⏳'} {r[0]}" for r in data])
+    res = "\n".join([f"{'✅' if r[1] else '⏳'} {html.escape(r[0])}" for r in data])
     await message.answer(f"✅ <b>Task List:</b>\n\n{res}", parse_mode="HTML")
 
 
@@ -62,7 +63,7 @@ async def show_schedule(message: types.Message):
     if not data:
         await message.answer("Schedule is empty.")
         return
-    res = "\n".join([f"📅 <b>{r[0]}</b>: {r[1]}" for r in data])
+    res = "\n".join([f"📅 <b>{html.escape(r[0])}</b>: {html.escape(r[1])}" for r in data])
     await message.answer(f"🕒 <b>Your Schedule:</b>\n\n{res}", parse_mode="HTML")
 
 
@@ -70,10 +71,14 @@ async def show_schedule(message: types.Message):
 async def cmd_add_task(message: types.Message):
     args = message.text.split(maxsplit=1)
     if len(args) < 2 or not args[1].strip():
-        await message.answer("Usage: /add_task <task_name>\nExample: /add_task Submit lab report")
+        await message.answer("Usage: /add_task <task name>")
         return
-    ai_god.add_task(args[1].strip())
-    await message.answer(f"Task Added: <b>{args[1].strip()}</b>", parse_mode="HTML")
+    task_name = args[1].strip()
+    ai_god.add_task(task_name)
+    await message.answer(
+        f"⏳ Task added: <b>{html.escape(task_name)}</b>",
+        parse_mode="HTML"
+    )
 
 
 @dp.message(Command("done"))
