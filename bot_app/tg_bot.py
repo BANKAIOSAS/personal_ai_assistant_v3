@@ -1,7 +1,7 @@
 import os
 import asyncio
 import threading
-from dotend import load_dotenv
+from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
 from .views import ai_god
@@ -70,6 +70,11 @@ async def ai_handler(message: types.Message):
         answer = "Sorry, I couldn't generate a response."
     ai_god.save_log(message.text, answer)
     await message.reply(answer)
+
+
+@dp.message(F.text.startswith('/'))
+async def unknown_command(message: types.Message):
+    await message.answer("Unknown command. Please use /start to see available commands.")
 
 
 def start_bot_loop():
