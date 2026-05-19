@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import json
 import socket
 import sqlite3
@@ -6,11 +8,12 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
+load_dotenv()
 
 class AiManagerMaster:
     def __init__(self):
-        self.lm_url = "http://localhost:1234/v1/chat/completions"
-        self.ai_port = 1234
+        self.lm_url = os.getenv('LM_STUDIO_URL', 'http://localhost:1234/v1/chat/completions')
+        self.ai_port = int(os.getenv('LM_STUDIO_PORT', 1234))
         self.db = 'db.sqlite3'
         self._init_table()
 

@@ -1,11 +1,17 @@
+import os
 import asyncio
 import threading
+from dotend import load_dotenv
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
 from .views import ai_god
 
+load_dotenv()
 
-BOT_TOKEN = "8660895856:AAHo5ktMthM8GsZ5XVwOTgKrbcSfj0c6cuc"
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+if not BOT_TOKEN:
+    raise ValueError("TELEGRAM_BOT_TOKEN is not set in the environment variables.")
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
